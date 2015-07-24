@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Capitole du Libre
+Comment=Organiser votre programme du Capitole du libre
+Exec=ubuntu-html5-app-launcher --www=www $@
+Icon=cdl.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+Name[fr_FR]=cdl.desktop

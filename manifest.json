@@ -1,0 +1,15 @@
+{
+    "name": "cdl.jonathan-wiedemann",
+    "description": "Organiser votre programme du Capitole du Libre",
+    "architecture": "all",
+    "title": "Capitole du Libre",
+    "hooks": {
+        "cdl": {
+            "apparmor": "cdl.apparmor",
+            "desktop": "cdl.desktop"
+        }
+    },
+    "maintainer": "Wiedemann Jonathan <wood.galaxy@gmail.com>",
+    "framework": "ubuntu-sdk-14.10",
+    "version": "0.1"
+}
