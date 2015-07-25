@@ -18,7 +18,6 @@
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/pagestacks.js"></script>
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/tabs.js"></script>
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/tab.js"></script>
-    <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/option-selector.js"></script>
 
     <!-- jquery lib -->
     <script src="js/jquery.min.js"></script>
@@ -42,7 +41,8 @@
 
       <div data-role="content">
         <div data-role="tab" id="main-page">
-          <div><p>Nous sommes le <span id="currentdate"></span></p></div>
+          <div id='info-evenement'></div>
+          <!-- <div><p>Nous sommes le <span id="currentdate"></span></p></div> -->
           <img src="img/logo-cdl.png">
           <p>Le Capitole du Libre est un événement consacré aux Logiciels Libres
           et à la culture libre, organisé par l’association Toulibre,
@@ -53,40 +53,23 @@
           <p><b>Organisé par : </b></p>
           <img src="img/logo-toulibre.png">
         </div>
+
         <div data-role="tab" id="pgm-page">
-          <p>Mon programme</p>
+        <div id="my-conf-list"></div>
+        <button data-role='button' onclick='delAllConf()'>Supprimer tout mon programme !</button>
         </div>
+
         <div data-role="tab" id="conf-page">
-          <div data-role="list" id="conf-list"></div>
+          <div id="all-conf-list"></div>
         </div>
+
         <div data-role="tab" id="work-page">
-          <div class="inset" style="margin: 15px;">
-          <section data-role="option-selector" id="os1">
-              <ul>
-                <li data-value="0">
-                  <p>Conf 1</p>
-                </li>
-                <li data-value="1">
-                  <p>Cette Conf Poutre<br>
-                  Et meme beaucoup</p>
-                  <p>L'auteru c'est pas moi</p>
-                </li>
-              </ul>
-            </section>
-            <section data-role="option-selector" id="os2">
-                <ul>
-                  <li data-value="0">
-                    <p>Conf 1</p>
-                  </li>
-                  <li data-value="1">
-                    <p>Description conf 2</p>
-                  </li>
-                </ul>
-              </section>
-            </div>
+          <p>Ateliers</p>
         </div>
+
         <div data-role="tab" id="speakers-page">
           <p>Speakers</p>
+          <div id="speakers-list"></div>
         </div>
       </div>
 
