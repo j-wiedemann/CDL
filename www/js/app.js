@@ -56,17 +56,42 @@ function getConferenceInfos(){
 
 function getConfList( ){
     var res ='';
-    var TheDocumentRoom = TheDocument.getElementsByTagName("event");
-    for (i=0;i<TheDocumentRoom.length;i++) {
-        var conftitle = TheDocumentRoom[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-        res += "<div><h2 id='conf-title"+ i +"' onclick='displayConfInfo(" + i + ")'>" + conftitle + "</h2>";
-        res += "<div id='conf-info" + i + "' style='display: none'></div><hr width='75%' align=left></div>";
-      }
+    var TheDocumentDay = TheDocument.getElementsByTagName("day");
+    for (d=0;d<TheDocumentDay.length;d++){
+        var confdate = TheDocumentDay[d].getAttribute('date');
+        var dayid = TheDocumentDay[d].getAttribute('index');
+        res += "<button data-role='button' class='secondary positive' onclick='displayConfDay(" + dayid + ")'>" + confdate + "</button><br><br>";
+        res += "<div id='conf-of-day" + dayid + "' style='display: none'>"
+        var TheDocumentEvent = TheDocumentDay[d].getElementsByTagName("event");
+        for (i=0;i<TheDocumentEvent.length;i++) {
+            var conftitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+            var confid = TheDocumentEvent[i].getAttribute('id');
+            res += "<div><h2 id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'><strong>" + conftitle + "</strong></h2>";
+            res += "<div id='conf-info" + confid + "' style='display: none'></div><hr width='75%' align=left></div>";
+         }
+        res += "</div>"
+    }
     return res;
 };
 
-function getEventInfo( i ){
+function getEventById(TheDocumentEvent,confid){
+    for (j=0;j<TheDocumentEvent.length;j++){
+        if(TheDocumentEvent[j].getAttribute('id') === confid.toString()){
+            var i = j
+        }
+    }
+    return i
+}
+
+function getEventInfo( confid ){
     var TheDocumentEvent = TheDocument.getElementsByTagName("event");
+    /*for (j=0;j<TheDocumentEvent.length;j++){
+        if(TheDocumentEvent[j].getAttribute('id') === confid.toString()){
+            console.log(j)
+            var i = j
+        }
+    }*/
+    var i = getEventById(TheDocumentEvent,confid)
     var confTitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
     var eventSpeakers = TheDocumentEvent[i].getElementsByTagName("persons");
     if(typeof(TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0]) !== "undefined") {
@@ -118,12 +143,31 @@ function getSpeakersList(){
     console.log(TheDocumentSpeakers);
 };
 
+function displayConfDay( i ){
+    var ele = document.getElementById("conf-of-day"+i);
+    if(ele.style.display === "block") {
+      ele.style.display = "none";
+    }
+    else {
+      ele.style.display = "block";
+    }
+};
+
+function displayMyConfDay( i ){
+    var ele = document.getElementById("myconf-of-day"+i);
+    if(ele.style.display === "block") {
+      ele.style.display = "none";
+    }
+    else {
+      ele.style.display = "block";
+    }
+};
+
 function displayConfInfo( i ){
     var res = getEventInfo( i );
     res += "<button data-role='button' class='positive' onclick='addConf(" + i + ")'>Ajouter à mon programme</button>"
     $("#conf-info"+i).html(res);
     var ele = document.getElementById("conf-info"+i);
-    var text = document.getElementById("conf-title"+i);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     }
@@ -137,7 +181,6 @@ function displayMyConfInfo( i ){
     res += "<button data-role='button' class='negative positive' onclick='delConf(" + i + ")'>Suprimmer du programme</button>"
     $("#myconf-info"+i).html(res);
     var ele = document.getElementById("myconf-info"+i);
-    var text = document.getElementById("myconf-title"+i);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     }
@@ -157,17 +200,28 @@ function refreshMyConfList(){
     if(typeof(Storage) !== "undefined") {
         if (localStorage.myconf) {
             var myconfsplit = localStorage.myconf.split(" ");
-            for(var i = myconfsplit.length; i--;){
-                if (myconfsplit[i] === "") {
-                    myconfsplit.splice(i, 1)
+            for(var s = myconfsplit.length; s--;){
+                if (myconfsplit[s] === "") {
+                    myconfsplit.splice(s, 1)
                 }
             };
-            var TheDocumentRoom = TheDocument.getElementsByTagName("event");
-            for (i=0; i < myconfsplit.length; i++){
-                var confid = myconfsplit[i]
-                var conftitle = TheDocumentRoom[confid].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-                res += "<div><h2 id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'>" + conftitle + "</h2>";
-                res += "<div id='myconf-info" + confid + "' style='display: none'></div><hr width='75%' align=left></div>";
+            var TheDocumentDay = TheDocument.getElementsByTagName("day");
+            for (d=0;d<TheDocumentDay.length;d++){
+                var confdate = TheDocumentDay[d].getAttribute('date');
+                var dayid = TheDocumentDay[d].getAttribute('index');
+                res += "<button data-role='button' class='secondary positive' onclick='displayMyConfDay(" + dayid + ")'>" + confdate + "</button><br><br>";
+                res += "<div id='myconf-of-day" + dayid + "' style='display: none'>"
+                var TheDocumentEvent = TheDocumentDay[d].getElementsByTagName("event");
+                for (i=0; i < myconfsplit.length; i++){
+                    var confid = myconfsplit[i]
+                    var j = getEventById(TheDocumentEvent,confid)
+                    if(typeof(j) !== "undefined"){
+                        var conftitle = TheDocumentEvent[j].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+                        res += "<div><h2 id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'><strong>" + conftitle + "</strong></h2>";
+                        res += "<div id='myconf-info" + confid + "' style='display: none'></div><hr width='75%' align=left></div>";
+                    }
+                }
+                res += "</div>"
             }
             $("#my-conf-list").html(res);
         } else {
@@ -177,13 +231,21 @@ function refreshMyConfList(){
 }
 
 function addConf( i ){
+    console.log(i);
     if(typeof(Storage) !== "undefined") {
         if (localStorage.myconf) {
-            localStorage.myconf = localStorage.myconf + ' ' + i.toString() + ' ';
+            if(localStorage.myconf.indexOf(i.toString()) === -1) {
+                console.log("Event added");
+                localStorage.myconf = localStorage.myconf + ' ' + i.toString() + ' ';
+            } else {
+                console.log("Event already added");
+            }
         } else {
             localStorage.myconf =  ' ' + i.toString() + ' ';
+            console.log("List empty : Event added");
         }
     }
+    console.log(localStorage.myconf)
     refreshMyConfList()
 };
 
