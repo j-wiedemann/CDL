@@ -41,9 +41,9 @@
 
       <div data-role="content">
         <div data-role="tab" id="main-page">
+          <img style="margin:0px auto;width:80%;display:block" src="img/logo-cdl.png">
           <div id='info-evenement'></div>
           <!-- <div><p>Nous sommes le <span id="currentdate"></span></p></div> -->
-          <img style="margin:0px auto;width:80%;display:block" src="img/logo-cdl.png">
           <p>Le Capitole du Libre est un événement consacré aux Logiciels Libres
           et à la culture libre, organisé par l’association Toulibre,
           orienté à la fois vers le grand public et le public spécialisé.
@@ -55,8 +55,19 @@
         </div>
 
         <div data-role="tab" id="pgm-page">
-        <div id="my-conf-list"></div>
-        <button data-role='button' onclick='delAllConf()'>Supprimer tout mon programme !</button>
+          <div id="my-conf-list"></div>
+          <button data-role='button' onclick='displayDialog1()'>Supprimer tout mon programme !</button>
+          <div data-role="dialog" id="dialog1" style="display: none">
+            <section>
+              <h1>Attention !</h1>
+              <!-- this heading is optional -->
+              <p>Êtes vous sûr de vouloir supprimer tout votre programme ?</p>
+              <menu>
+                <button data-role="button" class="negative" id="no" onclick='displayDialog1()'>Annuler</button>
+                <button data-role="button" id="yes" onclick='delAllConf()'>Effacer </button>
+              </menu>
+            </section>
+          </div>
         </div>
 
         <div data-role="tab" id="conf-page">
