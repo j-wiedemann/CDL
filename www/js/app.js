@@ -164,6 +164,7 @@ function displayMyConfDay( i ){
 }
 
 function displayConfInfo( id ){
+    var res = getEventInfo( id );
     if (localStorage.myconf) {
         console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
         var myconfsplit = localStorage.myconf.split(" ");
@@ -172,13 +173,12 @@ function displayConfInfo( id ){
                 myconfsplit.splice(s, 1);
             }
         }
-    }
-    var res = getEventInfo( id );
-    for (i=0; i < myconfsplit.length; i++){
-        var confid = myconfsplit[i];
-        if(confid === id.toString()){
-            res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Conférence programmée</button>";
-            var confisprog = "ok";
+        for (i=0; i < myconfsplit.length; i++){
+            var confid = myconfsplit[i];
+            if(confid === id.toString()){
+                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Conférence programmée</button>";
+                var confisprog = "ok";
+            }
         }
     }
     if(confisprog !== "ok"){
