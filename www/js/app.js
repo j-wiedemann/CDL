@@ -48,10 +48,8 @@ function getConferenceInfos(){
     var city = TheDocumentConference[0].getElementsByTagName("city")[0].childNodes[0].nodeValue;
     var start = TheDocumentConference[0].getElementsByTagName("start")[0].childNodes[0].nodeValue;
     var end = TheDocumentConference[0].getElementsByTagName("end")[0].childNodes[0].nodeValue;
-    /*var res = '<h1>'+ title + '</h1>';*/
     var res = '<p>Lieu : '+ venue + ' à '+ city +'</p>';
-    /*res += '<p>À : ' + city + '</p>';*/
-    res += '<p>Du : ' + start + ' au : ' + end + '</p>';
+    res += '<p>Du ' + start + ' au ' + end + '</p>';
     return res
 }
 
@@ -165,11 +163,29 @@ function displayMyConfDay( i ){
     }
 }
 
-function displayConfInfo( i ){
-    var res = getEventInfo( i );
-    res += "<button data-role='button' class='positive' onclick='addConf(" + i + ")'>Ajouter à mon programme</button>"
-    $("#conf-info"+i).html(res);
-    var ele = document.getElementById("conf-info"+i);
+function displayConfInfo( id ){
+    if (localStorage.myconf) {
+        console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
+        var myconfsplit = localStorage.myconf.split(" ");
+        for(var s = myconfsplit.length; s--;){
+            if (myconfsplit[s] === "") {
+                myconfsplit.splice(s, 1);
+            }
+        }
+    }
+    var res = getEventInfo( id );
+    for (i=0; i < myconfsplit.length; i++){
+        var confid = myconfsplit[i];
+        if(confid === id.toString()){
+            res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Conférence programmée</button>";
+            var confisprog = "ok";
+        }
+    }
+    if(confisprog !== "ok"){
+        res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Ajouter à mon programme</button>";
+    }
+    $("#conf-info"+id).html(res);
+    var ele = document.getElementById("conf-info"+id);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     } else {
@@ -179,7 +195,7 @@ function displayConfInfo( i ){
 
 function displayMyConfInfo( i ){
     var res = getEventInfo( i );
-    res += "<button data-role='button' class='negative positive' onclick='delConf(" + i + ")'>Supprimer du programme</button>";
+    res += "<button data-role='button' class='negative' onclick='delConf(" + i + ")'>Supprimer du programme</button>";
     $("#myconf-info"+i).html(res);
     var ele = document.getElementById("myconf-info"+i);
     if(ele.style.display === "block") {
@@ -280,6 +296,9 @@ function addConf( i ){
         }
     }
     console.log(localStorage.myconf);
+    var res = "<button id='bt-addconf-"+ i + "' data-role='button' class='secondary positive' onclick='addConf(" + i + ")'>Déjà programmée</button>";
+    $("#bt-addconf-"+i).html("Conférence programmée");
+    $("#bt-addconf-"+i).attr('class', 'secondary negative');
     refreshMyConfList();
 }
 
