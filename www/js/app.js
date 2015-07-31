@@ -33,11 +33,10 @@ $( document ).ready(function() {
     TheDocument = Connect.responseXML;
 
     $('#info-evenement').html(getConferenceInfos());
-    /*$('#currentdate').html(makeDateString());*/
     $('#my-conf-list').html(initMyConfList());
     refreshMyConfList();
-
     $('#all-conf-list').html(getConfList(TheDocument));
+    $('#all-speakers-list').html(createSpeakersHtml());
 
 });
 
@@ -65,8 +64,8 @@ function getConfList( ){
         for (i=0;i<TheDocumentEvent.length;i++) {
             var conftitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
             var confid = TheDocumentEvent[i].getAttribute('id');
-            res += "<div><h2 id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'><strong>" + conftitle + "</strong></h2>";
-            res += "<div id='conf-info" + confid + "' style='display: none'></div><hr width='75%' align=left></div>";
+            res += "<div><section data-role='event' id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'>" + conftitle + "</section>";
+            res += "<div id='conf-info" + confid + "' style='display: none'></div></div>";
          }
         res += "</div>"
     }
@@ -139,8 +138,25 @@ function getEventInfo( confid ){
 }
 
 function getSpeakersList(){
+    var speakersArray = [];
     var TheDocumentSpeakers = TheDocument.getElementsByTagName("person");
-    console.log(TheDocumentSpeakers);
+    for(i=0;i<TheDocumentSpeakers.length;i++){
+        var speaker = TheDocumentSpeakers[i].childNodes[0].nodeValue;
+        if(speakersArray.indexOf(speaker) === -1){
+            speakersArray.push(speaker);
+        }
+    }
+    return speakersArray;
+}
+
+function createSpeakersHtml(){
+    var speakersList = getSpeakersList();
+    speakersList.sort();
+    var res = '';
+    for(i=0;i<speakersList.length;i++){
+        res += "<section data-role='speaker' id='speaker-id"+ i +"' onclick=''>" + speakersList[i] + "</section>";
+    }
+    return res;
 }
 
 function displayConfDay( i ){
@@ -176,7 +192,7 @@ function displayConfInfo( id ){
         for (i=0; i < myconfsplit.length; i++){
             var confid = myconfsplit[i];
             if(confid === id.toString()){
-                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Conférence programmée</button>";
+                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='positive' onclick='addConf(" + id + ")'>Conférence programmée</button>";
                 var confisprog = "ok";
             }
         }
@@ -240,7 +256,6 @@ function initMyConfList(){
 }
 
 function refreshMyConfList(){
-    /*$('#my-conf-list').html(initMyConfList());*/
     if(typeof(Storage) !== "undefined") {
         console.log("Good ! Storage is not undefined");
         if (localStorage.myconf) {
@@ -269,8 +284,8 @@ function refreshMyConfList(){
                         } else {
                             start = startsplit[0] + "00";
                         }
-                        res += "<div id='myeventid-" + confid + "'><h2 id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'><strong>" + conftitle + "</strong></h2>";
-                        res += "<div id='myconf-info" + confid + "' style='display: none'></div><hr width='75%' align=left></div>";
+                        res += "<div id='myeventid-" + confid + "'><section data-role='event' id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'>" + conftitle + "</section>";
+                        res += "<div id='myconf-info" + confid + "' style='display: none'></div></div>";
                         $("#day"+ dayid + "h" + start).html(res)
                     }
                 }
@@ -313,8 +328,6 @@ function delConf( i ){
             console.log("New Storage" + localStorage.myconf);
         }
     }
-    /*var div = document.getElementById("myeventid-" + i);
-    div.parentNode.removeChild(div);*/
     $("#myeventid-"+ i).remove();
 }
 
@@ -329,18 +342,6 @@ function displayDialog1( ){
 }
 
 function delAllConf(  ){
-    /*
-    <div data-role="dialog" id="dialog1" style="display: block">
-                    <section>
-                        <h1>Simple Dialog</h1>
-                        <!-- this heading is optional -->
-                        <p>Are you sure you want to delete this file?</p>
-                        <menu>
-                            <button data-role="button" class="negative" id="no">Cancel</button>
-                            <button data-role="button" id="yes">Delete</button>
-                        </menu>
-                    </section>
-                </div>*/
     displayDialog1( );
     if(typeof(Storage) !== "undefined") {
         localStorage.clear();
