@@ -37,8 +37,32 @@ $( document ).ready(function() {
     refreshMyConfList();
     $('#all-conf-list').html(getConfList(TheDocument));
     $('#all-speakers-list').html(createSpeakersHtml());
-
+    $('#calendar').fullCalendar({
+        lang: 'fr',
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right:'',
+        },
+        contentHeight: 700,
+        defaultDate: getFCdefaultDate(),
+        defaultView: 'agendaDay',
+        editable: false,
+        events: [
+            {
+                title: 'All Day Event',
+                start: '2015-01-31'
+            }
+        ]
+    });
+    $('#calendar').fullCalendar('render');
 });
+
+function getFCdefaultDate(){
+    var TheDocumentConference = TheDocument.getElementsByTagName("conference");
+    var start = TheDocumentConference[0].getElementsByTagName("start")[0].childNodes[0].nodeValue;
+    return start;
+}
 
 function getConferenceInfos(){
     var TheDocumentConference = TheDocument.getElementsByTagName("conference");
@@ -316,6 +340,9 @@ function addConf( i ){
     $("#bt-addconf-"+i).attr('class', 'negative');
     $("#bt-addconf-"+i).attr('onclick', 'delConf("'+i+'")');
     refreshMyConfList();
+    $('#calendar').fullCalendar( 'addEventSource', [{title: 'event',start: '2015-01-31T09:30', end:'2015-01-31T10:30'}]);
+    $('#calendar').fullCalendar('next');
+    $('#calendar').fullCalendar('prev');
 }
 
 function delConf( i ){

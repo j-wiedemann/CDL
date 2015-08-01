@@ -23,6 +23,14 @@
     <!-- jquery lib -->
     <script src="js/jquery.min.js"></script>
 
+    <!-- Full Calendar stylesheet -->
+    <link rel='stylesheet' href='fullcalendar/fullcalendar.css' />
+
+    <!-- Full Calendar scripts -->
+    <script src='fullcalendar/lib/moment.min.js'></script>
+    <script src='fullcalendar/fullcalendar.js'></script>
+    <script src='fullcalendar/lang-all.js'></script>
+
     <!-- Application script -->
     <script src="js/app.js"></script>
   </head>
@@ -77,7 +85,7 @@
         </div>
 
         <div data-role="tab" id="work-page">
-          <p>Les Ateliers</p>
+          <div id='calendar'></div>
         </div>
 
         <div data-role="tab" id="speakers-page">
