@@ -192,7 +192,7 @@ function displayConfInfo( id ){
         for (i=0; i < myconfsplit.length; i++){
             var confid = myconfsplit[i];
             if(confid === id.toString()){
-                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='positive' onclick='addConf(" + id + ")'>Conférence programmée</button>";
+                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='delConf(" + id + ")'>Conférence programmée</button>";
                 var confisprog = "ok";
             }
         }
@@ -311,9 +311,10 @@ function addConf( i ){
         }
     }
     console.log(localStorage.myconf);
-    var res = "<button id='bt-addconf-"+ i + "' data-role='button' class='secondary positive' onclick='addConf(" + i + ")'>Déjà programmée</button>";
+    /*var res = "<button id='bt-addconf-"+ i + "' data-role='button' class='secondary positive' onclick='addConf(" + i + ")'>Déjà programmée</button>";*/
     $("#bt-addconf-"+i).html("Conférence programmée");
-    $("#bt-addconf-"+i).attr('class', 'secondary negative');
+    $("#bt-addconf-"+i).attr('class', 'negative');
+    $("#bt-addconf-"+i).attr('onclick', 'delConf("'+i+'")');
     refreshMyConfList();
 }
 
@@ -329,6 +330,9 @@ function delConf( i ){
         }
     }
     $("#myeventid-"+ i).remove();
+    $("#bt-addconf-"+i).html("Ajouter à mon programme");
+    $("#bt-addconf-"+i).attr('class', 'negative');
+    $("#bt-addconf-"+i).attr('onclick', 'addConf("'+i+'")');
 }
 
 function displayDialog1( ){
