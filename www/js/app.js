@@ -33,12 +33,140 @@ $( document ).ready(function() {
     TheDocument = Connect.responseXML;
 
     $('#info-evenement').html(getConferenceInfos());
+    $('#decompte').html(rebour());
+    setInterval(function(){$('#decompte').html(rebour());}, "1000");
     $('#my-conf-list').html(initMyConfList());
     refreshMyConfList();
     $('#all-conf-list').html(getConfList(TheDocument));
     $('#all-speakers-list').html(createSpeakersHtml());
-
+    $('#calendar').fullCalendar({
+        lang: 'fr',
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right:'',
+        },
+        contentHeight: 600,
+        defaultDate: getFCdefaultDate(),
+        defaultView: 'agendaDay',
+        editable: false,
+        allDaySlot: false,
+        minTime: "08:00:00",
+        maxTime: "19:00:00",
+        eventClick: function(event) {
+            if (event.id){
+                displayMyConfInfo( event.id );
+            }
+        }
+    });
+    initCalendar();
+    var tabs = UI.tabs.tabChildren;
+    //console.log(tabs);
+    var tab = tabs[1];
+    //console.log(tab);
+    tab.addEventListener("click", function() {
+        //console.log("touched");
+        $('#calendar').fullCalendar('render');
+    });
 });
+
+function getFCdefaultDate(){
+    var TheDocumentConference = TheDocument.getElementsByTagName("conference");
+    var start = TheDocumentConference[0].getElementsByTagName("start")[0].childNodes[0].nodeValue;
+    return start;
+}
+
+function getEventSource( confid ){
+    var TheDocumentEvent = TheDocument.getElementsByTagName("event");
+    var i = getEventById(TheDocumentEvent,confid);
+    var confTitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+    var day = TheDocumentEvent[i].parentElement.parentElement.getAttribute("date");
+    var start = TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
+    var duration = TheDocumentEvent[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0]) !== "undefined") {
+      var confAbstract = TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0].nodeValue;
+    }
+    var description = confAbstract
+    var startDate = moment(day + " " + start, "YYYY-MM-DD HH:mm");
+    //console.log("startDate",startDate.utcOffset(60));
+    var startDate2 = moment(day + " " + start, "YYYY-MM-DD HH:mm");
+    var durationTime = moment.duration(duration);
+    var endDate = startDate2.add(durationTime);
+    //console.log("startDate", startDate);
+    //console.log("endDate", endDate);
+    var eventsource = [confid, confTitle, startDate.utcOffset(60), endDate.utcOffset(60), description];
+    //console.log(eventsource[0],eventsource[1],eventsource[2],eventsource[3]);
+    return eventsource;
+}
+
+function addEventToCalendar(confid){
+    var eventsource = getEventSource(confid);
+    //console.log(eventsource);
+    //console.log(eventsource[0],eventsource[1],eventsource[2],eventsource[3]);
+    $('#calendar').fullCalendar( 'addEventSource', [{
+                                                        id: eventsource[0],
+                                                        title: eventsource[1],
+                                                        start: eventsource[2],
+                                                        end: eventsource[3],
+                                                        description: eventsource[4]
+                                                    }]
+                                );
+    $('#calendar').fullCalendar('render');
+}
+
+function initCalendar(){
+    if(typeof(Storage) !== "undefined") {
+            console.log("Good ! Storage is not undefined");
+            if (localStorage.myconf) {
+                console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
+                var myconfsplit = localStorage.myconf.split(" ");
+                for(var s = myconfsplit.length; s--;){
+                    if (myconfsplit[s] === "") {
+                        myconfsplit.splice(s, 1);
+                    }
+                }
+                for(i=0;i<myconfsplit.length; i++){
+                    addEventToCalendar(myconfsplit[i]);
+                }
+            }
+    }
+}
+
+function rebour(){
+    var date1 = new Date();
+    var date2 = new Date ("Nov 21, 2015 09:00:00");
+    var sec = (date2 - date1) / 1000;
+    var n = 24 * 3600;
+    if (sec > 0) {
+      j = Math.floor (sec / n);
+      h = Math.floor ((sec - (j * n)) / 3600);
+      mn = Math.floor ((sec - ((j * n + h * 3600))) / 60);
+      sec = Math.floor (sec - ((j * n + h * 3600 + mn * 60)));
+      var mot_jour = 'j';
+      var mot_heure = 'h';
+      var mot_minute = 'min';
+      var mot_seconde = 's';
+      if (j == 0){
+          j = '';
+          mot_jour = '';
+      }
+      if (h == 0){
+          h = '';
+          mot_heure = '';
+      }
+      if (mn == 0){
+          mn = '';
+          mot_minute = '';
+      }
+      if (sec == 0){
+    s = '';
+        mot_seconde = '';
+        et = '';
+      }
+  }
+  var res = j + ' ' + mot_jour + ' ' + h + ' ' + mot_heure + ' ' + mn + ' ' + mot_minute + ' ' + sec + ' ' + mot_seconde;
+  return res
+}
 
 function getConferenceInfos(){
     var TheDocumentConference = TheDocument.getElementsByTagName("conference");
@@ -221,12 +349,6 @@ function displayMyConfInfo( i ){
     }
 }
 
-function makeDateString() {
-      var d = new Date();
-      var dString = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
-      return dString;
-}
-
 function initMyConfList(){
     var res = '';
     var TheDocumentDay = TheDocument.getElementsByTagName("day");
@@ -296,25 +418,27 @@ function refreshMyConfList(){
     }
 }
 
-function addConf( i ){
+function addConf( confid ){
     if(typeof(Storage) !== "undefined") {
         if (localStorage.myconf) {
-            if(localStorage.myconf.indexOf(i.toString()) === -1) {
+            if(localStorage.myconf.indexOf(confid.toString()) === -1) {
                 console.log("Event added");
-                localStorage.myconf = localStorage.myconf + ' ' + i.toString() + ' ';
+                localStorage.myconf = localStorage.myconf + ' ' + confid.toString() + ' ';
+                addEventToCalendar(confid);
             } else {
                 console.log("Event already added");
             }
         } else {
-            localStorage.myconf =  ' ' + i.toString() + ' ';
+            localStorage.myconf =  ' ' + confid.toString() + ' ';
+            addEventToCalendar(confid);
             console.log("List empty : Event added");
         }
     }
     console.log(localStorage.myconf);
     /*var res = "<button id='bt-addconf-"+ i + "' data-role='button' class='secondary positive' onclick='addConf(" + i + ")'>Déjà programmée</button>";*/
-    $("#bt-addconf-"+i).html("Conférence programmée");
-    $("#bt-addconf-"+i).attr('class', 'negative');
-    $("#bt-addconf-"+i).attr('onclick', 'delConf("'+i+'")');
+    $("#bt-addconf-"+confid).html("Conférence programmée");
+    $("#bt-addconf-"+confid).attr('class', 'negative');
+    $("#bt-addconf-"+confid).attr('onclick', 'delConf("'+ confid +'")');
     refreshMyConfList();
 }
 
@@ -337,6 +461,16 @@ function delConf( i ){
 
 function displayDialog1( ){
     var ele = document.getElementById("dialog1");
+    if(ele.style.display === "block") {
+      ele.style.display = "none";
+    }
+    else {
+      ele.style.display = "block";
+    }
+}
+
+function displayDialogID( ){
+    var ele = document.getElementById("dialogID");
     if(ele.style.display === "block") {
       ele.style.display = "none";
     }
