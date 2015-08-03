@@ -26,18 +26,23 @@ $( document ).ready(function() {
     var UI = new UbuntuUI();
     UI.init();
 
+    var tabs = UI.tabs.tabChildren;
+    tab = tabs[1];
+
     var Connect = new XMLHttpRequest();
     Connect.open("GET", "data/schedule.xml", false);
     Connect.setRequestHeader("Content-Type", "text/xml");
     Connect.send(null);
     TheDocument = Connect.responseXML;
+    TheDocumentConference = TheDocument.getElementsByTagName("conference");
+    TheDocumentDay = TheDocument.getElementsByTagName("day");
+    TheDocumentEvents = TheDocument.getElementsByTagName("event");
 
     $('#info-evenement').html(getConferenceInfos());
     $('#decompte').html(rebour());
     setInterval(function(){$('#decompte').html(rebour());}, "1000");
-    $('#my-conf-list').html(initMyConfList());
     refreshMyConfList();
-    $('#all-conf-list').html(getConfList(TheDocument));
+    $('#all-conf-list').html(getConfList());
     $('#all-speakers-list').html(createSpeakersHtml());
     $('#calendar').fullCalendar({
         lang: 'fr',
@@ -51,6 +56,7 @@ $( document ).ready(function() {
         defaultView: 'agendaDay',
         editable: false,
         allDaySlot: false,
+        slotEventOverlap: false,
         minTime: "08:00:00",
         maxTime: "19:00:00",
         eventClick: function(event) {
@@ -60,12 +66,8 @@ $( document ).ready(function() {
         }
     });
     initCalendar();
-    var tabs = UI.tabs.tabChildren;
-    //console.log(tabs);
-    var tab = tabs[1];
-    //console.log(tab);
     tab.addEventListener("click", function() {
-        //console.log("touched");
+        console.log("tab clicked");
         $('#calendar').fullCalendar('render');
     });
 });
@@ -77,28 +79,21 @@ function getFCdefaultDate(){
 }
 
 function getEventSource( confid ){
-    var TheDocumentEvent = TheDocument.getElementsByTagName("event");
-    var i = getEventById(TheDocumentEvent,confid);
-    var confTitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-    var day = TheDocumentEvent[i].parentElement.parentElement.getAttribute("date");
-    var start = TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
-    var duration = TheDocumentEvent[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
+    var i = getEventById(TheDocumentEvents,confid);
+    var confTitle = TheDocumentEvents[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+    var day = TheDocumentEvents[i].parentElement.parentElement.getAttribute("date");
+    var start = TheDocumentEvents[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
+    var duration = TheDocumentEvents[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
     var startDate = moment(day + " " + start, "YYYY-MM-DD HH:mm");
-    //console.log("startDate",startDate.utcOffset(60));
     var startDate2 = moment(day + " " + start, "YYYY-MM-DD HH:mm");
     var durationTime = moment.duration(duration);
     var endDate = startDate2.add(durationTime);
-    //console.log("startDate", startDate);
-    //console.log("endDate", endDate);
     var eventsource = [confid, confTitle, startDate.utcOffset(60), endDate.utcOffset(60)];
-    //console.log(eventsource[0],eventsource[1],eventsource[2],eventsource[3]);
     return eventsource;
 }
 
 function addEventToCalendar(confid){
     var eventsource = getEventSource(confid);
-    //console.log(eventsource);
-    //console.log(eventsource[0],eventsource[1],eventsource[2],eventsource[3]);
     $('#calendar').fullCalendar( 'addEventSource', [{
                                                         id: eventsource[0],
                                                         title: eventsource[1],
@@ -106,12 +101,30 @@ function addEventToCalendar(confid){
                                                         end: eventsource[3]
                                                     }]
                                 );
+    refreshCalendar();
+}
+
+function delEventFromCalendar(confid){
+    $('#calendar').fullCalendar( 'removeEvents', confid);
+    refreshCalendar();
+}
+
+function delAllEventsFromCalendar(){
+    $('#calendar').fullCalendar( 'removeEvents');
+    refreshCalendar();
+}
+
+function refreshCalendar(){
+    //tab.addEventListener("click", function() {
+    //    console.log("tab clicked");
+    //    $('#calendar').fullCalendar('render');
+    //});
     $('#calendar').fullCalendar('render');
 }
 
 function initCalendar(){
     if(typeof(Storage) !== "undefined") {
-            console.log("Good ! Storage is not undefined");
+            //console.log("Good ! Storage is not undefined");
             if (localStorage.myconf) {
                 console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
                 var myconfsplit = localStorage.myconf.split(" ");
@@ -164,7 +177,6 @@ function rebour(){
 }
 
 function getConferenceInfos(){
-    var TheDocumentConference = TheDocument.getElementsByTagName("conference");
     var title = TheDocumentConference[0].getElementsByTagName("title")[0].childNodes[0].nodeValue;
     var venue = TheDocumentConference[0].getElementsByTagName("venue")[0].childNodes[0].nodeValue;
     var city = TheDocumentConference[0].getElementsByTagName("city")[0].childNodes[0].nodeValue;
@@ -177,17 +189,20 @@ function getConferenceInfos(){
 
 function getConfList( ){
     var res ='';
-    var TheDocumentDay = TheDocument.getElementsByTagName("day");
     for (d=0;d<TheDocumentDay.length;d++){
         var confdate = TheDocumentDay[d].getAttribute('date');
         var dayid = TheDocumentDay[d].getAttribute('index');
         res += "<button data-role='button' class='secondary positive' onclick='displayConfDay(" + dayid + ")'>" + confdate + "</button><br><br>";
-        res += "<div id='conf-of-day" + dayid + "' style='display: none'>"
-        var TheDocumentEvent = TheDocumentDay[d].getElementsByTagName("event");
-        for (i=0;i<TheDocumentEvent.length;i++) {
-            var conftitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-            var confid = TheDocumentEvent[i].getAttribute('id');
-            res += "<div><section data-role='event' id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'>" + conftitle + "</section>";
+        res += "<div id='conf-of-day" + dayid + "' style='display: none'>";
+        var TheDocumentEventsByDay = TheDocumentDay[d].getElementsByTagName("event");
+        for (i=0;i<TheDocumentEventsByDay.length;i++) {
+            var conftitle = TheDocumentEventsByDay[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+            var confid = TheDocumentEventsByDay[i].getAttribute('id');
+            if (isConfProg(confid)){
+                res += "<div><section data-role='event' class='positive' id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'>" + conftitle + "</section>";
+            } else{
+                res += "<div><section data-role='event' class='negative' id='conf-title"+ confid +"' onclick='displayConfInfo(" + confid + ")'>" + conftitle + "</section>";
+            }
             res += "<div id='conf-info" + confid + "' style='display: none'></div></div>";
          }
         res += "</div>"
@@ -195,9 +210,9 @@ function getConfList( ){
     return res;
 }
 
-function getEventById(TheDocumentEvent,confid){
-    for (j=0;j<TheDocumentEvent.length;j++){
-        if(TheDocumentEvent[j].getAttribute('id') === confid.toString()){
+function getEventById(doc,confid){
+    for (j=0;j<doc.length;j++){
+        if(doc[j].getAttribute('id') === confid.toString()){
             var i = j;
         }
     }
@@ -205,28 +220,27 @@ function getEventById(TheDocumentEvent,confid){
 }
 
 function getEventInfo( confid ){
-    var TheDocumentEvent = TheDocument.getElementsByTagName("event");
-    var i = getEventById(TheDocumentEvent,confid);
-    var confTitle = TheDocumentEvent[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-    var eventSpeakers = TheDocumentEvent[i].getElementsByTagName("persons");
-    var eventLinks = TheDocumentEvent[i].getElementsByTagName("links");
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0]) !== "undefined") {
-      var confStart = TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
+    var i = getEventById(TheDocumentEvents,confid);
+    var confTitle = TheDocumentEvents[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+    var eventSpeakers = TheDocumentEvents[i].getElementsByTagName("persons");
+    var eventLinks = TheDocumentEvents[i].getElementsByTagName("links");
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("start")[0].childNodes[0]) !== "undefined") {
+      var confStart = TheDocumentEvents[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
     }
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("duration")[0].childNodes[0]) !== "undefined") {
-      var confDuration = TheDocumentEvent[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("duration")[0].childNodes[0]) !== "undefined") {
+      var confDuration = TheDocumentEvents[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
     }
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("room")[0].childNodes[0]) !== "undefined") {
-      var confRoom = TheDocumentEvent[i].getElementsByTagName("room")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("room")[0].childNodes[0]) !== "undefined") {
+      var confRoom = TheDocumentEvents[i].getElementsByTagName("room")[0].childNodes[0].nodeValue;
     }
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("track")[0].childNodes[0]) !== "undefined") {
-      var confTrack = TheDocumentEvent[i].getElementsByTagName("track")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("track")[0].childNodes[0]) !== "undefined") {
+      var confTrack = TheDocumentEvents[i].getElementsByTagName("track")[0].childNodes[0].nodeValue;
     }
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0]) !== "undefined") {
-      var confAbstract = TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("abstract")[0].childNodes[0]) !== "undefined") {
+      var confAbstract = TheDocumentEvents[i].getElementsByTagName("abstract")[0].childNodes[0].nodeValue;
     }
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("description")[0].childNodes[0]) !== "undefined") {
-      var confDescription = TheDocumentEvent[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
+    if(typeof(TheDocumentEvents[i].getElementsByTagName("description")[0].childNodes[0]) !== "undefined") {
+      var confDescription = TheDocumentEvents[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
     }
     var res = '<p>Par :';
     for (j=0;j<eventSpeakers[0].getElementsByTagName("person").length;j++) {
@@ -292,35 +306,29 @@ function displayConfDay( i ){
     }
 }
 
-function displayMyConfDay( i ){
-    var ele = document.getElementById("myconf-of-day"+i);
-    if(ele.style.display === "block") {
-      ele.style.display = "none";
-    }
-    else {
-      ele.style.display = "block";
-    }
-}
-
-function displayConfInfo( id ){
-    var res = getEventInfo( id );
+function isConfProg(confid){
+    var confIsprog = false;
     if (localStorage.myconf) {
-        console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
         var myconfsplit = localStorage.myconf.split(" ");
         for(var s = myconfsplit.length; s--;){
             if (myconfsplit[s] === "") {
                 myconfsplit.splice(s, 1);
             }
         }
-        for (i=0; i < myconfsplit.length; i++){
-            var confid = myconfsplit[i];
-            if(confid === id.toString()){
-                res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='delConf(" + id + ")'>Conférence programmée</button>";
-                var confisprog = "ok";
-            }
+        if(myconfsplit.indexOf(confid) >= 0){
+            confIsprog = true;
+        } else {
+            confIsprog = false;
         }
     }
-    if(confisprog !== "ok"){
+    return confIsprog;
+}
+
+function displayConfInfo( id ){
+    var res = getEventInfo( id );
+    if (isConfProg(id.toString())){
+        res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='delConf(" + id + ")'>Conférence programmée</button>";
+    } else {
         res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Ajouter à mon programme</button>";
     }
     $("#conf-info"+id).html(res);
@@ -332,49 +340,29 @@ function displayConfInfo( id ){
     }
 }
 
-function displayMyConfInfo( i ){
-    var res = getEventInfo( i );
-    res += "<button data-role='button' class='negative' onclick='delConf(" + i + ")'>Supprimer du programme</button>";
-    $("#myconf-info"+i).html(res);
-    var ele = document.getElementById("myconf-info"+i);
+function scrollToElement(el, ms){
+    var speed = (ms) ? ms : 600;
+    $('html,body').animate({
+        scrollTop: $(el).offset().top
+    }, speed);
+}
+
+function displayMyConfInfo( confid ){
+    var res = getEventInfo( confid );
+    res += "<button data-role='button' class='negative' onclick='delConf(" + confid + ")'>Supprimer du programme</button><br><br>";
+    $("#myconf-info"+confid).html(res);
+    var ele = document.getElementById("myconf-info"+confid);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     } else {
       ele.style.display = "block";
     }
-}
-
-function initMyConfList(){
-    var res = '';
-    var TheDocumentDay = TheDocument.getElementsByTagName("day");
-    for (d=0;d<TheDocumentDay.length;d++){
-        var confdate = TheDocumentDay[d].getAttribute('date');
-        var dayid = TheDocumentDay[d].getAttribute('index');
-        res += "<button data-role='button' class='secondary positive' onclick='displayMyConfDay(" + dayid + ")'>" + confdate + "</button><br><br>";
-        res += "<div id='myconf-of-day" + dayid + "' style='display: none'>";
-        var start = new Date("October 13, 2014 09:00:00");
-        var halfhour = new Date(3600*500);
-        for (i=0;i<20;i++){
-            var min = start.getMinutes();
-            var hour = start.getHours();
-            if(min.toString().length < 2){
-                min = "0"+min.toString();
-            }
-            res += "<p style='text-align:center'>----- "+ hour + ":" + min + " -----</p>";
-            if(hour.toString().length < 2){
-                hour = "0"+hour.toString();
-            }
-            res += "<div id='day"+ dayid + "h" + hour + min + "'></div>";
-            start = new Date(start.getTime() + halfhour.getTime());
-        }
-        res += "</div>";
-    }
-    return res
+    scrollToElement("#myeventid-"+confid,600);
 }
 
 function refreshMyConfList(){
     if(typeof(Storage) !== "undefined") {
-        console.log("Good ! Storage is not undefined");
+        //console.log("Good ! Storage is not undefined");
         if (localStorage.myconf) {
             console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
             var myconfsplit = localStorage.myconf.split(" ");
@@ -383,31 +371,20 @@ function refreshMyConfList(){
                     myconfsplit.splice(s, 1);
                 }
             }
-            var TheDocumentDay = TheDocument.getElementsByTagName("day");
-            for (d=0;d<TheDocumentDay.length;d++){
-                var confdate = TheDocumentDay[d].getAttribute('date');
-                var dayid = TheDocumentDay[d].getAttribute('index');
-                var TheDocumentEvent = TheDocumentDay[d].getElementsByTagName("event");
-                for (i=0; i < myconfsplit.length; i++){
-                    var confid = myconfsplit[i];
-                    var j = getEventById(TheDocumentEvent,confid);
-                    var res = '';
-                    if(typeof(j) !== "undefined"){
-                        var conftitle = TheDocumentEvent[j].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-                        var start = TheDocumentEvent[j].getElementsByTagName("start")[0].childNodes[0].nodeValue;
-                        var startsplit = start.split(":");
-                        if(startsplit[1]>=30){
-                            start = startsplit[0] + "30";
-                        } else {
-                            start = startsplit[0] + "00";
-                        }
-                        res += "<div id='myeventid-" + confid + "'><section data-role='event' id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'>" + conftitle + "</section>";
-                        res += "<div id='myconf-info" + confid + "' style='display: none'></div></div>";
-                        $("#day"+ dayid + "h" + start).html(res)
-                    }
+            $("#my-conf-list").html('');
+            for (i=0; i < myconfsplit.length; i++){
+                var res='';
+                var confid = myconfsplit[i];
+                var j = getEventById(TheDocumentEvents,confid);
+                if(typeof(j) !== "undefined"){
+                    var conftitle = TheDocumentEvents[j].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+                    res += "<div id='myeventid-" + confid + "'><section data-role='event' class='positive' id='myconf-title"+ confid +"' onclick='displayMyConfInfo(" + confid + ")'>" + conftitle + "</section>";
+                    res += "<div id='myconf-info" + confid + "' style='display: none'></div></div>";
+                    $("#my-conf-list").append(res);
                 }
             }
         } else {
+            $("#my-conf-list").html('');
             console.log("localStorage.myconf does not exist");
         }
     }
@@ -417,22 +394,20 @@ function addConf( confid ){
     if(typeof(Storage) !== "undefined") {
         if (localStorage.myconf) {
             if(localStorage.myconf.indexOf(confid.toString()) === -1) {
-                console.log("Event added");
                 localStorage.myconf = localStorage.myconf + ' ' + confid.toString() + ' ';
                 addEventToCalendar(confid);
-                $('#calendar').fullCalendar('render');
+                console.log("Event added");
             } else {
                 console.log("Event already added");
             }
         } else {
             localStorage.myconf =  ' ' + confid.toString() + ' ';
             addEventToCalendar(confid);
-            $('#calendar').fullCalendar('render');
             console.log("List empty : Event added");
         }
     }
-    console.log(localStorage.myconf);
-    /*var res = "<button id='bt-addconf-"+ i + "' data-role='button' class='secondary positive' onclick='addConf(" + i + ")'>Déjà programmée</button>";*/
+    //console.log(localStorage.myconf);
+    $("#conf-title"+ confid).attr('class', 'positive');
     $("#bt-addconf-"+confid).html("Conférence programmée");
     $("#bt-addconf-"+confid).attr('class', 'negative');
     $("#bt-addconf-"+confid).attr('onclick', 'delConf("'+ confid +'")');
@@ -448,29 +423,19 @@ function delConf( confid ){
             var mynewconf = localStorage.myconf.replace(' ' + confid.toString() + ' ','');
             localStorage.myconf = mynewconf;
             console.log("New Storage" + localStorage.myconf);
-            $('#calendar').fullCalendar( 'removeEvents', confid);
-            $('#calendar').fullCalendar('render');
-            //initCalendar();
+            delEventFromCalendar(confid);
         }
     }
     $("#myeventid-"+ confid).remove();
+    $("#conf-title"+ confid).attr('class', 'negative');
     $("#bt-addconf-"+confid).html("Ajouter à mon programme");
     $("#bt-addconf-"+confid).attr('class', 'negative');
     $("#bt-addconf-"+confid).attr('onclick', 'addConf("'+ confid +'")');
 }
 
 function displayDialog1( ){
+    $('html,body').animate({scrollTop: 0}, 'fast');
     var ele = document.getElementById("dialog1");
-    if(ele.style.display === "block") {
-      ele.style.display = "none";
-    }
-    else {
-      ele.style.display = "block";
-    }
-}
-
-function displayDialogID( ){
-    var ele = document.getElementById("dialogID");
     if(ele.style.display === "block") {
       ele.style.display = "none";
     }
@@ -484,5 +449,7 @@ function delAllConf(  ){
     if(typeof(Storage) !== "undefined") {
         localStorage.clear();
     }
-    $('#my-conf-list').html(initMyConfList());
+    delAllEventsFromCalendar();
+    refreshMyConfList();
+    $('#all-conf-list').html(getConfList( ));
 }
