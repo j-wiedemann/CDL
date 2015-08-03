@@ -83,10 +83,6 @@ function getEventSource( confid ){
     var day = TheDocumentEvent[i].parentElement.parentElement.getAttribute("date");
     var start = TheDocumentEvent[i].getElementsByTagName("start")[0].childNodes[0].nodeValue;
     var duration = TheDocumentEvent[i].getElementsByTagName("duration")[0].childNodes[0].nodeValue;
-    if(typeof(TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0]) !== "undefined") {
-      var confAbstract = TheDocumentEvent[i].getElementsByTagName("abstract")[0].childNodes[0].nodeValue;
-    }
-    var description = confAbstract
     var startDate = moment(day + " " + start, "YYYY-MM-DD HH:mm");
     //console.log("startDate",startDate.utcOffset(60));
     var startDate2 = moment(day + " " + start, "YYYY-MM-DD HH:mm");
@@ -94,7 +90,7 @@ function getEventSource( confid ){
     var endDate = startDate2.add(durationTime);
     //console.log("startDate", startDate);
     //console.log("endDate", endDate);
-    var eventsource = [confid, confTitle, startDate.utcOffset(60), endDate.utcOffset(60), description];
+    var eventsource = [confid, confTitle, startDate.utcOffset(60), endDate.utcOffset(60)];
     //console.log(eventsource[0],eventsource[1],eventsource[2],eventsource[3]);
     return eventsource;
 }
@@ -107,8 +103,7 @@ function addEventToCalendar(confid){
                                                         id: eventsource[0],
                                                         title: eventsource[1],
                                                         start: eventsource[2],
-                                                        end: eventsource[3],
-                                                        description: eventsource[4]
+                                                        end: eventsource[3]
                                                     }]
                                 );
     $('#calendar').fullCalendar('render');
@@ -425,12 +420,14 @@ function addConf( confid ){
                 console.log("Event added");
                 localStorage.myconf = localStorage.myconf + ' ' + confid.toString() + ' ';
                 addEventToCalendar(confid);
+                $('#calendar').fullCalendar('render');
             } else {
                 console.log("Event already added");
             }
         } else {
             localStorage.myconf =  ' ' + confid.toString() + ' ';
             addEventToCalendar(confid);
+            $('#calendar').fullCalendar('render');
             console.log("List empty : Event added");
         }
     }
@@ -442,21 +439,24 @@ function addConf( confid ){
     refreshMyConfList();
 }
 
-function delConf( i ){
-    console.log("Del Event : " + i);
+function delConf( confid ){
+    console.log("Del Event : " + confid);
     if(typeof(Storage) !== "undefined") {
         console.log("Good ! Storage is not undefined");
         if (localStorage.myconf) {
             console.log("Current Storage" + localStorage.myconf);
-            var mynewconf = localStorage.myconf.replace(' ' + i.toString() + ' ','');
+            var mynewconf = localStorage.myconf.replace(' ' + confid.toString() + ' ','');
             localStorage.myconf = mynewconf;
             console.log("New Storage" + localStorage.myconf);
+            $('#calendar').fullCalendar( 'removeEvents', confid);
+            $('#calendar').fullCalendar('render');
+            //initCalendar();
         }
     }
-    $("#myeventid-"+ i).remove();
-    $("#bt-addconf-"+i).html("Ajouter à mon programme");
-    $("#bt-addconf-"+i).attr('class', 'negative');
-    $("#bt-addconf-"+i).attr('onclick', 'addConf("'+i+'")');
+    $("#myeventid-"+ confid).remove();
+    $("#bt-addconf-"+confid).html("Ajouter à mon programme");
+    $("#bt-addconf-"+confid).attr('class', 'negative');
+    $("#bt-addconf-"+confid).attr('onclick', 'addConf("'+ confid +'")');
 }
 
 function displayDialog1( ){

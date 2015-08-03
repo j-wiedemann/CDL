@@ -32,9 +32,13 @@
 }
 
 [data-role="event"].positive {
-  background: #38b44a;
-  color: white;
-  border-color: #38b44a;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  color:#D03D00;
+  background: url(../img/cord3-vert.svg) no-repeat 0.2em 0em;
+  background-size: 1.1rem;
+  padding-left: 1.5em;
+  /*Icons made by http://www.flaticon.com/authors/freepik is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" */
 }
 
 [data-role="speaker"] {
