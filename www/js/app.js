@@ -57,17 +57,22 @@ $( document ).ready(function() {
         editable: false,
         allDaySlot: false,
         slotEventOverlap: false,
-        minTime: "08:00:00",
-        maxTime: "19:00:00",
+        minTime: "09:00:00",
+        maxTime: "20:00:00",
         eventClick: function(event) {
             if (event.id){
                 displayMyConfInfo( event.id );
             }
         }
     });
+    $('.fc-toolbar .fc-left').prepend(
+        $('<button type="button" class="fc-button fc-state-default fc-corner-left fc-corner-right">Rafraîchir</button>')
+            .on('click', function() {
+                refreshCalendar()
+            })
+    );
     initCalendar();
     tab.addEventListener("click", function() {
-        console.log("tab clicked");
         $('#calendar').fullCalendar('render');
     });
 });
@@ -101,17 +106,17 @@ function addEventToCalendar(confid){
                                                         end: eventsource[3]
                                                     }]
                                 );
-    refreshCalendar();
+    //refreshCalendar();
 }
 
 function delEventFromCalendar(confid){
     $('#calendar').fullCalendar( 'removeEvents', confid);
-    refreshCalendar();
+    //refreshCalendar();
 }
 
 function delAllEventsFromCalendar(){
     $('#calendar').fullCalendar( 'removeEvents');
-    refreshCalendar();
+    //refreshCalendar();
 }
 
 function refreshCalendar(){
@@ -119,7 +124,16 @@ function refreshCalendar(){
     //    console.log("tab clicked");
     //    $('#calendar').fullCalendar('render');
     //});
-    $('#calendar').fullCalendar('render');
+    $('#calendar').fullCalendar( 'addEventSource', [{
+                                                        id: "0000",
+                                                        title: 'Meeting',
+                                                        start: '2015-02-12T10:30:00',
+                                                        end: '2015-02-12T12:30:00'
+                                                    }]
+                                );
+    $('#calendar').fullCalendar( 'removeEvents', "0000");
+
+    //$('#calendar').fullCalendar('render');
 }
 
 function initCalendar(){
