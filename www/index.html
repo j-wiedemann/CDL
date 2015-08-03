@@ -10,6 +10,9 @@
     <link href="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/css/appTemplate.css" rel="stylesheet" type="text/css" />
     <link href="css/custom.css" rel="stylesheet" type="text/css" />
 
+    <!-- Full Calendar stylesheet -->
+    <link rel='stylesheet' href='fullcalendar/fullcalendar.css' />
+
     <!-- Ubuntu UI javascript imports - Ambiance theme -->
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/fast-buttons.js"></script>
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/core.js"></script>
@@ -21,7 +24,12 @@
     <script src="/usr/share/ubuntu-html5-ui-toolkit/0.1/ambiance/js/tab.js"></script>
 
     <!-- jquery lib -->
-    <script src="js/jquery.min.js"></script>
+    <script src="fullcalendar/lib/jquery.min.js"></script>
+
+    <!-- fullcalendar lib -->
+    <script src="fullcalendar/lib/moment.min.js"></script>
+    <script src='fullcalendar/fullcalendar.js'></script>
+    <script src='fullcalendar/lang-all.js'></script>
 
     <!-- Application script -->
     <script src="js/app.js"></script>
@@ -31,7 +39,7 @@
     <div data-role="mainview">
 
       <header data-role="header">
-        <ul data-role="tabs">
+        <ul data-role="tabs" style="-webkit-transform: none !important;">
           <li data-role="tabitem" data-page="main-page">Présentation</li>
           <li data-role="tabitem" data-page="pgm-page">Mon programme</li>
           <li data-role="tabitem" data-page="conf-page">Les conférences</li>
@@ -43,7 +51,8 @@
 
       <div data-role="content">
         <div data-role="tab" id="main-page">
-          <img style="margin:0px auto;width:80%;display:block" src="img/logo-cdl.png">
+          <img style="margin:0px auto;width:80%;display:block" src="img/logo-cdl.svg"></br>
+          <div id='decompte'></div></br>
           <div id='info-evenement'></div>
           <!-- <div><p>Nous sommes le <span id="currentdate"></span></p></div> -->
           <p>Le Capitole du Libre est un événement consacré aux Logiciels Libres
@@ -53,11 +62,13 @@
           des stands et des animations seront proposés au public pour leur
           faire découvrir le monde du Libre.</p><br>
           <p><b>Organisé par : </b></p>
-          <img style="margin:0px auto;width:80%;display:block" src="img/logo-toulibre.png">
+          <img style="margin:0px auto;width:80%;display:block" src="img/logo-toulibre.svg">
         </div>
 
         <div data-role="tab" id="pgm-page">
+          <div id='calendar'></div>
           <div id="my-conf-list"></div>
+          <br>
           <button data-role='button' onclick='displayDialog1()'>Supprimer tout mon programme !</button>
           <div data-role="dialog" id="dialog1" style="display: none">
             <section>
@@ -76,12 +87,9 @@
           <div id="all-conf-list"></div>
         </div>
 
-        <div data-role="tab" id="work-page">
-          <p>Les Ateliers</p>
-        </div>
+        <div data-role="tab" id="work-page"></div>
 
         <div data-role="tab" id="speakers-page">
-          <p>Speakers</p>
           <div id="all-speakers-list"></div>
         </div>
 
