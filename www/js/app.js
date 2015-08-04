@@ -65,15 +65,16 @@ $( document ).ready(function() {
             }
         }
     });
-    $('.fc-toolbar .fc-left').prepend(
-        $('<button type="button" class="fc-button fc-state-default fc-corner-left fc-corner-right">Rafraîchir</button>')
-            .on('click', function() {
-                refreshCalendar()
-            })
-    );
+    //$('.fc-toolbar .fc-left').prepend(
+    //    $('<button type="button" class="fc-button fc-state-default fc-corner-left fc-corner-right">Rafraîchir</button>')
+    //        .on('click', function() {
+    //            refreshCalendar()
+    //        })
+    //);
     initCalendar();
     tab.addEventListener("click", function() {
-        $('#calendar').fullCalendar('render');
+        refreshCalendar();
+        //$('#calendar').fullCalendar('render');
     });
 });
 
