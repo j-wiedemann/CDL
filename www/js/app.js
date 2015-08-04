@@ -47,8 +47,8 @@ $( document ).ready(function() {
     $('#calendar').fullCalendar({
         lang: 'fr',
         header: {
-            left: 'prev,next today',
-            center: 'title',
+            left: '',
+            center: 'prev,next title',
             right:'',
         },
         contentHeight: 600,
@@ -65,16 +65,14 @@ $( document ).ready(function() {
             }
         }
     });
-    $('.fc-toolbar .fc-left').prepend(
-        $('<button type="button" class="fc-button fc-state-default fc-corner-left fc-corner-right">Rafraîchir</button>')
-            .on('click', function() {
-                refreshCalendar()
-            })
-    );
     initCalendar();
     tab.addEventListener("click", function() {
         $('#calendar').fullCalendar('render');
+        refreshCalendar();
     });
+    displayedDayId = null;
+    displayedConfId = null;
+    displayedMyConfId = null;
 });
 
 function getFCdefaultDate(){
@@ -106,24 +104,17 @@ function addEventToCalendar(confid){
                                                         end: eventsource[3]
                                                     }]
                                 );
-    //refreshCalendar();
 }
 
 function delEventFromCalendar(confid){
     $('#calendar').fullCalendar( 'removeEvents', confid);
-    //refreshCalendar();
 }
 
 function delAllEventsFromCalendar(){
     $('#calendar').fullCalendar( 'removeEvents');
-    //refreshCalendar();
 }
 
 function refreshCalendar(){
-    //tab.addEventListener("click", function() {
-    //    console.log("tab clicked");
-    //    $('#calendar').fullCalendar('render');
-    //});
     $('#calendar').fullCalendar( 'addEventSource', [{
                                                         id: "0000",
                                                         title: 'Meeting',
@@ -132,13 +123,10 @@ function refreshCalendar(){
                                                     }]
                                 );
     $('#calendar').fullCalendar( 'removeEvents', "0000");
-
-    //$('#calendar').fullCalendar('render');
 }
 
 function initCalendar(){
     if(typeof(Storage) !== "undefined") {
-            //console.log("Good ! Storage is not undefined");
             if (localStorage.myconf) {
                 console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
                 var myconfsplit = localStorage.myconf.split(" ");
@@ -310,14 +298,20 @@ function createSpeakersHtml(){
     return res;
 }
 
-function displayConfDay( i ){
-    var ele = document.getElementById("conf-of-day"+i);
+function displayConfDay( dayId ){
+    if(displayedDayId && displayedDayId !== dayId){
+        var lele = document.getElementById("conf-of-day"+displayedDayId);
+        lele.style.display = "none";
+    }
+    var ele = document.getElementById("conf-of-day"+dayId);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     }
     else {
       ele.style.display = "block";
     }
+    scrollToElement("#conf-of-day"+dayId,600);
+    displayedDayId = dayId;
 }
 
 function isConfProg(confid){
@@ -338,20 +332,26 @@ function isConfProg(confid){
     return confIsprog;
 }
 
-function displayConfInfo( id ){
-    var res = getEventInfo( id );
-    if (isConfProg(id.toString())){
-        res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='delConf(" + id + ")'>Conférence programmée</button>";
-    } else {
-        res += "<button id='bt-addconf-"+ id + "' data-role='button' class='negative' onclick='addConf(" + id + ")'>Ajouter à mon programme</button>";
+function displayConfInfo( confid ){
+    if(displayedConfId && displayedConfId !== confid){
+        var lele = document.getElementById("conf-info"+displayedConfId);
+        lele.style.display = "none";
     }
-    $("#conf-info"+id).html(res);
-    var ele = document.getElementById("conf-info"+id);
+    var res = getEventInfo( confid );
+    if (isConfProg(confid.toString())){
+        res += "<button id='bt-addconf-"+ confid + "' data-role='button' class='negative' onclick='delConf(" + confid + ")'>Supprimer du programme</button>";
+    } else {
+        res += "<button id='bt-addconf-"+ confid + "' data-role='button' class='negative' onclick='addConf(" + confid + ")'>Ajouter à mon programme</button>";
+    }
+    $("#conf-info"+confid).html(res);
+    var ele = document.getElementById("conf-info"+confid);
     if(ele.style.display === "block") {
       ele.style.display = "none";
     } else {
       ele.style.display = "block";
     }
+    scrollToElement("#conf-title"+confid,600);
+    displayedConfId = confid
 }
 
 function scrollToElement(el, ms){
@@ -362,6 +362,10 @@ function scrollToElement(el, ms){
 }
 
 function displayMyConfInfo( confid ){
+    if(displayedMyConfId && displayedMyConfId !== confid){
+        var lele = document.getElementById("myconf-info"+displayedMyConfId);
+        lele.style.display = "none";
+    }
     var res = getEventInfo( confid );
     res += "<button data-role='button' class='negative' onclick='delConf(" + confid + ")'>Supprimer du programme</button><br><br>";
     $("#myconf-info"+confid).html(res);
@@ -372,11 +376,11 @@ function displayMyConfInfo( confid ){
       ele.style.display = "block";
     }
     scrollToElement("#myeventid-"+confid,600);
+    displayedMyConfId = confid
 }
 
 function refreshMyConfList(){
     if(typeof(Storage) !== "undefined") {
-        //console.log("Good ! Storage is not undefined");
         if (localStorage.myconf) {
             console.log("Good ! localStorage.myconf exist : " + localStorage.myconf);
             var myconfsplit = localStorage.myconf.split(" ");
@@ -420,11 +424,14 @@ function addConf( confid ){
             console.log("List empty : Event added");
         }
     }
-    //console.log(localStorage.myconf);
     $("#conf-title"+ confid).attr('class', 'positive');
     $("#bt-addconf-"+confid).html("Conférence programmée");
-    $("#bt-addconf-"+confid).attr('class', 'negative');
+    $("#bt-addconf-"+confid).attr('class', 'positive');
     $("#bt-addconf-"+confid).attr('onclick', 'delConf("'+ confid +'")');
+    setTimeout(function() {
+        $("#bt-addconf-"+confid).html("Supprimer du programme");
+        $("#bt-addconf-"+confid).attr('class', 'negative');
+    },2000);
     refreshMyConfList();
 }
 
@@ -442,9 +449,14 @@ function delConf( confid ){
     }
     $("#myeventid-"+ confid).remove();
     $("#conf-title"+ confid).attr('class', 'negative');
-    $("#bt-addconf-"+confid).html("Ajouter à mon programme");
-    $("#bt-addconf-"+confid).attr('class', 'negative');
+    $("#bt-addconf-"+confid).html("Conférence supprimée");
+    $("#bt-addconf-"+confid).attr('class', 'positive');
     $("#bt-addconf-"+confid).attr('onclick', 'addConf("'+ confid +'")');
+    setTimeout(function() {
+        $("#bt-addconf-"+confid).html("Ajouter à mon programme");
+        $("#bt-addconf-"+confid).attr('class', 'negative');
+    },2000);
+    displayedMyConfId = null;
 }
 
 function displayDialog1( ){
