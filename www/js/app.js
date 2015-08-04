@@ -47,7 +47,7 @@ $( document ).ready(function() {
     $('#calendar').fullCalendar({
         lang: 'fr',
         header: {
-            left: 'prev,next today',
+            left: 'prev,next',
             center: 'title',
             right:'',
         },
